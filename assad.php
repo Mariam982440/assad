@@ -1,3 +1,15 @@
+<?php
+session_start();
+
+if(!isset($_SESSION['user_id'])){
+    header("location: login.php");
+    exit();
+}
+
+$nom = $_SESSION['nom'];
+$role = $_SESSION['role'];
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -10,20 +22,24 @@
 
     <!-- NAVBAR COMMUNE -->
     <nav class="bg-green-800 text-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="text-xl font-bold flex items-center gap-2">
-                <i class="fas fa-paw text-yellow-400"></i> ASSAD ZOO
-            </div>
-            <!-- Menu Simulé (Selon le rôle, tu afficheras certains liens avec PHP) -->
-            <div class="hidden md:flex space-x-6">
-                <a href="asaad.html" class="text-yellow-300 font-bold border-b-2 border-yellow-300">Le Lion Asaad</a>
-                <a href="visitor_catalog.html" class="hover:text-yellow-200">Animaux</a>
-                <a href="admin_panel.html" class="hover:text-yellow-200">Espace Admin (Test)</a>
-                <a href="guide_panel.html" class="hover:text-yellow-200">Espace Guide (Test)</a>
-            </div>
-            <a href="login.html" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition">Déconnexion</a>
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="text-xl font-bold flex items-center gap-2">
+            <i class="fas fa-paw text-yellow-400"></i> ASSAD ZOO
         </div>
-    </nav>
+        
+        <div class="hidden md:flex space-x-6 items-center">
+            <span class="text-yellow-300 font-bold">Bonjour, <?= $nom ?> (<?= $role ?>)</span>
+            
+            <a href="asaad.php" class="hover:text-yellow-200">Accueil</a>
+            
+            
+                <a href="guide/animal.php" class="bg-blue-600 px-3 py-1 rounded">Espace <?=$role?></a>
+            
+
+            <a href="logout.php" class="bg-gray-700 px-3 py-1 rounded hover:bg-gray-800">Déconnexion</a>
+        </div>
+    </div>
+</nav>
 
     <!-- HEADER HERO -->
     <header class="relative h-[500px] flex items-center justify-center text-white bg-fixed bg-cover bg-center" 

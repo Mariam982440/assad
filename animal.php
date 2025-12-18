@@ -1,3 +1,15 @@
+<?php
+session_start();
+
+if(!isset($_SESSION['user_id'])){
+    header("location: login.php");
+    exit();
+}
+
+$nom = $_SESSION['nom'];
+$role = $_SESSION['role'];
+
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -19,17 +31,31 @@
 
     <!-- NAVBAR (Statique pour l'instant) -->
     <nav class="bg-green-800 text-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="text-xl font-bold flex items-center gap-2">
-                <i class="fas fa-paw text-yellow-400"></i> ASSAD ZOO
-            </div>
-            <div class="hidden md:flex space-x-6">
-                <a href="index.html" class="hover:text-yellow-200">Accueil</a>
-                <a href="#" class="text-yellow-300 font-bold border-b-2 border-yellow-300">Les Animaux</a>
-                <a href="#" class="hover:text-yellow-200">Visites</a>
-            </div>
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="text-xl font-bold flex items-center gap-2">
+            <i class="fas fa-paw text-yellow-400"></i> ASSAD ZOO
         </div>
-    </nav>
+        
+        <div class="hidden md:flex space-x-6 items-center">
+            <span class="text-yellow-300 font-bold">Bonjour, <?= $nom ?> (<?= $role ?>)</span>
+            
+            <a href="asaad.php" class="hover:text-yellow-200">Accueil</a>
+            
+            <!-- Lien visible seulement pour le GUIDE -->
+            <?php if($role == 'guide'): ?>
+                <a href="guide/guide_tours.php" class="bg-blue-600 px-3 py-1 rounded">Les reservations</a>
+                <a href="guide/guide_tours.php" class="bg-blue-600 px-3 py-1 rounded">Les reservations</a>
+            <?php endif; ?>
+
+            <!-- Lien visible seulement pour l'ADMIN -->
+            <?php if($role == 'admin'): ?>
+                <a href="admin/dashboard.php" class="bg-red-600 px-3 py-1 rounded">Espace Admin</a>
+            <?php endif; ?>
+
+            <a href="logout.php" class="bg-gray-700 px-3 py-1 rounded hover:bg-gray-800">Déconnexion</a>
+        </div>
+    </div>
+</nav>
 
     <!-- EN-TÊTE DE PAGE -->
     <header class="bg-white shadow-sm py-10">
