@@ -1,4 +1,5 @@
 <?php
+require_once 'db.php';
 session_start();
 
 if(!isset($_SESSION['user_id'])){
@@ -9,6 +10,25 @@ if(!isset($_SESSION['user_id'])){
 $nom = $_SESSION['nom'];
 $role = $_SESSION['role'];
 
+$habitats = mysqli_query($conn, "SELECT * FROM habitatt");
+$pays = mysqli_query($conn, "SELECT distinct paysorigine FROM animal WHERE paysorigine IS NOT NULL AND paysorigine != ''");
+
+$filtre_habitat = isset($_GET['habitat']) ? $_GET['habitat'] : "";
+$filtre_pays    = isset($_GET['pays']) ? $_GET['pays'] : "";
+
+$sql="SELECT a.*,h.nom_hab from animal a LEFT JOIN habitatt h on a.id_habitat = h.id_hab where 1";
+$result =mysqli_query($conn,$sql);
+
+//filtre habitat
+if ($filtre_habitat !== "") {
+    $sql .= " AND animal.habitat_id = " . intval($filtreHabitat);
+}
+//filtre pays
+if ($filtre_pays !== "") {
+    $safe_pays = mysqli_real_escape_string($conn, $filtre_pays);
+    $sql .= " AND a.paysorigine = '$safe_pays'";
+}
+$result =mysqli_query($conn,$sql);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -29,7 +49,7 @@ $role = $_SESSION['role'];
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <!-- NAVBAR (Statique pour l'instant) -->
+    
     <nav class="bg-green-800 text-white shadow-lg sticky top-0 z-50">
     <div class="container mx-auto px-6 py-4 flex justify-between items-center">
         <div class="text-xl font-bold flex items-center gap-2">
@@ -39,17 +59,24 @@ $role = $_SESSION['role'];
         <div class="hidden md:flex space-x-6 items-center">
             <span class="text-yellow-300 font-bold">Bonjour, <?= $nom ?> (<?= $role ?>)</span>
             
-            <a href="asaad.php" class="hover:text-yellow-200">Accueil</a>
+            <a href="assad.php" class="hover:text-yellow-200">Accueil</a>
             
-            <!-- Lien visible seulement pour le GUIDE -->
+            <!-- lien visible seulement pour le GUIDE -->
             <?php if($role == 'guide'): ?>
-                <a href="guide/guide_tours.php" class="bg-blue-600 px-3 py-1 rounded">Les reservations</a>
-                <a href="guide/guide_tours.php" class="bg-blue-600 px-3 py-1 rounded">Les reservations</a>
+                <a href="guide/guide_reservations.php" class=" px-3 py-1 rounded"> Réservations</a>
+                <a href="guide/guide_tours.php" class=" px-3 py-1 rounded"> Visites </a>
             <?php endif; ?>
 
-            <!-- Lien visible seulement pour l'ADMIN -->
+            <!-- lien visible seulement pour l'ADMIN -->
             <?php if($role == 'admin'): ?>
-                <a href="admin/dashboard.php" class="bg-red-600 px-3 py-1 rounded">Espace Admin</a>
+                <a href="admin/admin_compte.php" class=" px-3 py-1 rounded">Comptes</a>
+                <a href="admin/admin_panel.php" class=" px-3 py-1 rounded">Statistiques</a>
+            <?php endif; ?>
+            
+            <!-- lien visible seulement pour le visiteur-->
+            <?php if($role=='visiteur'):?>
+            <a href="admin/admin_compte.php" class=" px-3 py-1 rounded">Comptes</a>
+            <a href="admin/admin_panel.php" class=" px-3 py-1 rounded">Statistiques</a>
             <?php endif; ?>
 
             <a href="logout.php" class="bg-gray-700 px-3 py-1 rounded hover:bg-gray-800">Déconnexion</a>
@@ -65,10 +92,16 @@ $role = $_SESSION['role'];
                 <p class="text-gray-600">Découvrez les espèces protégées et leurs habitats naturels.</p>
             </div>
             
-            <!-- BOUTON AJOUTER (Visible seulement si Admin - Simulation visuelle) -->
-            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 shadow flex items-center gap-2 transition">
-                <i class="fas fa-plus-circle"></i> Ajouter un animal
-            </button>
+            <!-- seulement l'admin voit ce bouton-->
+            <?php if($role == 'admin'): ?>
+                <a href="admin/add_animal.php" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 shadow">
+                    <i class="fas fa-plus-circle"></i> Ajouter un animal
+                </a>
+                <a href="admin/add_habitat.php" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 shadow">
+                    <i class="fas fa-plus-circle"></i> Ajouter un habitat
+                </a>
+            <?php endif; ?>
+            
         </div>
     </header>
 
@@ -80,25 +113,28 @@ $role = $_SESSION['role'];
                 
                 <!-- Recherche par nom -->
                 <div class="relative w-full md:w-1/3">
-                    <input type="text" placeholder="Rechercher un animal (ex: Lion)..." class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <input name="nom_rech" type="text" placeholder="Rechercher un animal (ex: Lion)..." class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                     <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                 </div>
 
-                <!-- Filtre Habitat -->
-                <select class="w-full md:w-1/4 border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
+                <!-- filtre hab -->
+                <select name="filtre_hab" class="w-full md:w-1/4 border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
                     <option value="">Tous les habitats</option>
-                    <option value="Savane">Savane</option>
-                    <option value="Jungle">Jungle</option>
-                    <option value="Montagne">Montagne</option>
-                    <option value="Désert">Désert</option>
+                    <?php while($hab=mysqli_fetch_assoc($habitats)):?>
+                    <option value="<?= $hab['nom_hab']?>" <?= ($filtre_habitat=$hab['nom_hab']) ? 'selected':""?>>
+                        <?= $hab['nom_hab'] ?>
+                    </option>
+                    <?php endwhile; ?>
                 </select>
 
-                <!-- Filtre Pays -->
-                <select class="w-full md:w-1/4 border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
-                    <option value="">Tous les pays</option>
-                    <option value="Maroc">Maroc</option>
-                    <option value="Kenya">Kenya</option>
-                    <option value="Sénégal">Sénégal</option>
+                <!-- filtre pays -->
+                <select name="filtre_pays" class="w-full md:w-1/4 border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
+                    <option value="">Tous les habitats</option>
+                    <?php while($pay=mysqli_fetch_assoc($pays)):?>
+                    <option value="<?= $pay['paysorigine']?>" <?= ($filtre_pays=$hab['paysorigine']) ? 'selected':""?>>
+                        <?= $pay['paysorigine'] ?>
+                    </option>
+                    <?php endwhile; ?>
                 </select>
 
                 <!-- Bouton Filtrer -->
@@ -108,91 +144,43 @@ $role = $_SESSION['role'];
             </form>
         </div>
 
+        
         <!-- GRILLE DES ANIMAUX -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-
-            <!-- CARTE 1 : Lion (Vue Standard) -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 card group">
-                <div class="relative h-56 overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?w=600" alt="Lion" class="w-full h-full object-cover card-img">
-                    <div class="absolute top-2 right-2 bg-yellow-400 text-xs font-bold px-2 py-1 rounded shadow">STAR</div>
-                </div>
-                <div class="p-5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="text-xl font-bold text-gray-800">Lion de l'Atlas</h3>
-                        <span class="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">Montagne</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-4"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i> Maroc</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <?php while($row = mysqli_fetch_assoc($result)): ?>
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
                     
-                    <a href="#" class="block w-full bg-green-100 text-green-800 text-center py-2 rounded font-bold hover:bg-green-200 transition">
-                        Voir Fiche
-                    </a>
-                </div>
-            </div>
-
-            <!-- CARTE 2 : Éléphant (Vue Admin - Exemple) -->
-            <!-- Cette carte montre à quoi ça ressemble quand l'admin est connecté -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 card group">
-                <div class="relative h-56 overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=600" alt="Elephant" class="w-full h-full object-cover card-img">
-                </div>
-                <div class="p-5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="text-xl font-bold text-gray-800">Éléphant</h3>
-                        <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">Savane</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-4"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i> Kenya</p>
+                    <!-- Image (On gère le cas où il n'y a pas d'image) -->
+                    <?php $imgSrc = !empty($row['image']) ? "uploads/".$row['image'] : "https://via.placeholder.com/300"; ?>
+                    <img src="<?= $imgSrc ?>" alt="<?= $row['nom_al'] ?>" class="w-full h-48 object-cover">
                     
-                    <!-- ZONE ACTIONS ADMIN (À protéger avec PHP plus tard) -->
-                    <div class="flex gap-2">
-                        <a href="#" class="flex-1 bg-green-100 text-green-800 text-center py-2 rounded font-bold hover:bg-green-200 text-sm">
-                            Voir
-                        </a>
-                        <a href="#" class="w-10 bg-blue-100 text-blue-600 flex items-center justify-center rounded hover:bg-blue-200">
-                            <i class="fas fa-pen"></i>
-                        </a>
-                        <a href="#" class="w-10 bg-red-100 text-red-600 flex items-center justify-center rounded hover:bg-red-200">
-                            <i class="fas fa-trash"></i>
-                        </a>
+                    <div class="p-4">
+                        <div class="flex justify-between items-start">
+                            <h3 class="text-xl font-bold"><?= $row['nom_al'] ?></h3>
+                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                <?= $row['nom_hab'] ?? 'Aucun habitat' ?>
+                            </span>
+                        </div>
+                        <p class="text-gray-600 text-sm mt-2"><?= substr($row['descriptioncourte'], 0, 80) ?>...</p>
+                        
+                        <!-- seulement pour l'admin -->
+                        <?php if($role == 'admin'): ?>
+                            <div class="mt-4 flex gap-2 border-t pt-3">
+                                <a href="admin/edit_animal.php?id=<?= $row['id_al'] ?>" class="flex-1 bg-blue-100 text-blue-600 py-1 rounded text-center hover:bg-blue-200">
+                                    <i class="fas fa-edit"></i> Modifier
+                                </a>
+                                <a href="admin/delete_animal.php?id=<?= $row['id_al'] ?>" onclick="return confirm('Êtes-vous sûr ?')" 
+                                    class="flex-1 bg-red-100 text-red-600 py-1 rounded text-center hover:bg-red-200">
+                                    <i class="fas fa-trash"></i> Supprimer
+                                </a>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
-            </div>
+            <?php endwhile; ?>
 
-            <!-- CARTE 3 : Fennec -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 card group">
-                <div class="relative h-56 overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1531594896955-305cf81269ce?w=600" alt="Fennec" class="w-full h-full object-cover card-img">
-                </div>
-                <div class="p-5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="text-xl font-bold text-gray-800">Fennec</h3>
-                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Désert</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-4"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i> Algérie / Maroc</p>
-                    
-                    <a href="#" class="block w-full bg-green-100 text-green-800 text-center py-2 rounded font-bold hover:bg-green-200 transition">
-                        Voir Fiche
-                    </a>
-                </div>
-            </div>
-
-            <!-- CARTE 4 : Zèbre -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 card group">
-                <div class="relative h-56 overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1504204267155-aaad8e81290d?w=600" alt="Zèbre" class="w-full h-full object-cover card-img">
-                </div>
-                <div class="p-5">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="text-xl font-bold text-gray-800">Zèbre</h3>
-                        <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">Savane</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mb-4"><i class="fas fa-map-marker-alt text-red-500 mr-1"></i> Tanzanie</p>
-                    
-                    <a href="#" class="block w-full bg-green-100 text-green-800 text-center py-2 rounded font-bold hover:bg-green-200 transition">
-                        Voir Fiche
-                    </a>
-                </div>
-            </div>
+        </div>
 
         </div>
 

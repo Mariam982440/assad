@@ -1,15 +1,15 @@
 <?php
 session_start();
-require 'db.php'; // Inclusion de la connexion MySQLi
+require 'db.php'; 
 
 $message = "";
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // --- CAS : INSCRIPTION ---
+    // --- inscription ---
     if (isset($_POST['btn_register'])) {
-        // On récupère les données du formulaire HTML
+        // on récupère les données du formulaire HTML
         $nom = mysqli_real_escape_string($conn, $_POST['nom']);
         $email = mysqli_real_escape_string($conn, $_POST['email']);
         $password = $_POST['password'];
@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // --- CONNEXION ---
+    // --- connexion ---
     if (isset($_POST['btn_login'])) {
         $email = mysqli_real_escape_string($conn, $_POST['email']);
         $password = $_POST['password'];
@@ -57,12 +57,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 // 4. redirection selon le rôle
                 if ($row['role_usr'] == 'admin') {
-                    header("Location: admin/dashboard.php");
+                    header("Location: assad.php");
                 } elseif ($row['role_usr'] == 'guide') {
-                    header("Location: guide/guide_tours.php");
+                    header("Location: assad.php");
                 } else {
                     // visiteur
-                    header("Location: asaad.html"); 
+                    header("Location: assad.php"); 
                 }
                 exit();
             } else {

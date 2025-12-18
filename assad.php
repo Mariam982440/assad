@@ -33,7 +33,7 @@ $role = $_SESSION['role'];
             <a href="asaad.php" class="hover:text-yellow-200">Accueil</a>
             
             
-                <a href="guide/animal.php" class="bg-blue-600 px-3 py-1 rounded">Espace <?=$role?></a>
+                <a href="animal.php" class="bg-blue-600 px-3 py-1 rounded">Espace <?=$role?></a>
             
 
             <a href="logout.php" class="bg-gray-700 px-3 py-1 rounded hover:bg-gray-800">Déconnexion</a>
