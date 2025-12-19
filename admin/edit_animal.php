@@ -2,7 +2,6 @@
 session_start();
 require '../db.php'; // On remonte d'un dossier pour trouver db.php
 
-// 1. SÉCURITÉ : Vérifier si c'est un ADMIN
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
     die("Accès interdit : Vous n'êtes pas administrateur.");
 }

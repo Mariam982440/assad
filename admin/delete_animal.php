@@ -12,6 +12,6 @@ if (isset($_GET['id'])) {
     mysqli_query($conn, $sql);
 }
 
-header("Location: ../asaad.php");
+header("Location: ../animal.php");
 exit();
 ?>

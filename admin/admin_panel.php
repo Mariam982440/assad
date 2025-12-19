@@ -1,3 +1,16 @@
+<?php
+session_start();
+require '../db.php'; 
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
+    die("Accès interdit : Vous n'êtes pas administrateur.");
+}
+$animal = "SELECT a.*,h.nom_hab from animal a LEFT JOIN habitatt h on a.id_habitat = h.id_hab";
+$result_anl =mysqli_query($conn,$animal);
+
+
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -35,31 +48,6 @@
                 <div class="text-3xl font-bold">3</div>
             </div>
         </div>
-
-        <!-- SECTION GESTION (CRUD) -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <!-- FORMULAIRE AJOUT ANIMAL -->
-            <div class="bg-white p-6 rounded-lg shadow h-fit">
-                <h3 class="font-bold text-lg mb-4 border-b pb-2">Ajouter / Modifier Animal</h3>
-                <form class="space-y-4">
-                    <input type="text" placeholder="Nom de l'animal" class="w-full border p-2 rounded">
-                    <input type="text" placeholder="Espèce" class="w-full border p-2 rounded">
-                    <select class="w-full border p-2 rounded">
-                        <option>Choisir Habitat...</option>
-                        <option>Savane</option>
-                        <option>Jungle</option>
-                    </select>
-                    <input type="file" class="w-full text-sm text-gray-500">
-                    <textarea placeholder="Description courte" class="w-full border p-2 rounded"></textarea>
-                    
-                    <div class="flex gap-2">
-                        <button class="bg-green-600 text-white w-full py-2 rounded hover:bg-green-700">Sauvegarder</button>
-                        <button class="bg-gray-300 text-gray-700 px-4 rounded hover:bg-gray-400">Annuler</button>
-                    </div>
-                </form>
-            </div>
-
             <!-- TABLEAU LISTE ANIMAUX -->
             <div class="lg:col-span-2 bg-white rounded-lg shadow overflow-hidden">
                 <div class="p-4 border-b flex justify-between items-center bg-gray-50">
@@ -75,31 +63,31 @@
                             <th class="p-3 text-right">Actions</th>
                         </tr>
                     </thead>
+                    
                     <tbody class="divide-y text-sm">
-                        <!-- Exemple Ligne 1 -->
+                        <?php while($anl=mysqli_fetch_assoc($result_anl)):?>
                         <tr class="hover:bg-gray-50">
-                            <td class="p-3"><img src="https://via.placeholder.com/40" class="w-10 h-10 rounded-full object-cover"></td>
-                            <td class="p-3 font-medium">Lion Atlas</td>
-                            <td class="p-3"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Montagne</span></td>
+                            <td class="p-3"><img src="../uploads/<?= $anl['image']?>" class="w-10 h-10 rounded-full object-cover"></td>
+                            <td class="p-3 font-medium"><?=$anl['nom_al']?></td>
+                            <td class="p-3"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs"><?=$anl['nom_hab']?></span></td>
                             <td class="p-3 text-right">
-                                <button class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-edit"></i></button>
-                                <button class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                                <!-- <button class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-edit"></i></button> -->
+                                <a href="edit_animal.php?id=<?= $anl['id_al'] ?>" class="text-blue-500 hover:text-blue-700 mr-2">
+                                    <i class="fas fa-edit"></i> 
+                                </a>
+                                <a href="delete_animal.php?id=<?= $anl['id_al'] ?>" class="text-red-500 hover:text-red-700"
+                                onclick="return confirm('Êtes-vous sûr ?')">
+                                    <i class="fas fa-trash"></i> 
+                                </a>
                             </td>
                         </tr>
-                         <!-- Exemple Ligne 2 -->
-                         <tr class="hover:bg-gray-50">
-                            <td class="p-3"><img src="https://via.placeholder.com/40" class="w-10 h-10 rounded-full object-cover"></td>
-                            <td class="p-3 font-medium">Gazelle</td>
-                            <td class="p-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Savane</span></td>
-                            <td class="p-3 text-right">
-                                <button class="text-blue-500 hover:text-blue-700 mr-2"><i class="fas fa-edit"></i></button>
-                                <button class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
+                        <?php endwhile;?>
+                         
                     </tbody>
                 </table>
                 <!-- Pagination -->
                 <div class="p-3 border-t text-center text-sm text-gray-500">
+                    
                     Page 1 sur 5
                 </div>
             </div>

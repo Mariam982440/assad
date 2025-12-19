@@ -17,7 +17,6 @@ $filtre_habitat = isset($_GET['habitat']) ? $_GET['habitat'] : "";
 $filtre_pays    = isset($_GET['pays']) ? $_GET['pays'] : "";
 
 $sql="SELECT a.*,h.nom_hab from animal a LEFT JOIN habitatt h on a.id_habitat = h.id_hab where 1";
-$result =mysqli_query($conn,$sql);
 
 //filtre habitat
 if ($filtre_habitat !== "") {
@@ -121,7 +120,7 @@ $result =mysqli_query($conn,$sql);
                 <select name="filtre_hab" class="w-full md:w-1/4 border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
                     <option value="">Tous les habitats</option>
                     <?php while($hab=mysqli_fetch_assoc($habitats)):?>
-                    <option value="<?= $hab['nom_hab']?>" <?= ($filtre_habitat=$hab['nom_hab']) ? 'selected':""?>>
+                    <option value="<?= $hab['nom_hab']?>" <?= ($filtre_habitat==$hab['nom_hab']) ? 'selected':""?>>
                         <?= $hab['nom_hab'] ?>
                     </option>
                     <?php endwhile; ?>
@@ -129,16 +128,16 @@ $result =mysqli_query($conn,$sql);
 
                 <!-- filtre pays -->
                 <select name="filtre_pays" class="w-full md:w-1/4 border p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white">
-                    <option value="">Tous les habitats</option>
+                    <option value="">Tous les pays</option>
                     <?php while($pay=mysqli_fetch_assoc($pays)):?>
-                    <option value="<?= $pay['paysorigine']?>" <?= ($filtre_pays=$hab['paysorigine']) ? 'selected':""?>>
+                    <option value="<?= $pay['paysorigine']?>" <?= ($filtre_pays==$hab['paysorigine']) ? 'selected':""?>>
                         <?= $pay['paysorigine'] ?>
                     </option>
                     <?php endwhile; ?>
                 </select>
 
                 <!-- Bouton Filtrer -->
-                <button type="button" class="w-full md:w-auto bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-800 font-bold transition">
+                <button type="submit" class="w-full md:w-auto bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-800 font-bold transition">
                     Filtrer
                 </button>
             </form>
