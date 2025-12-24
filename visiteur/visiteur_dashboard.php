@@ -14,8 +14,9 @@
                 <i class="fas fa-paw text-yellow-400"></i> ASSAD ZOO
             </div>
             <div class="space-x-4">
-                <a href="visitor_tours.php" class="hover:text-yellow-200">Réserver une visite</a>
-                <a href="visitor_dashboard.php" class="text-yellow-300 font-bold border-b-2 border-yellow-300">Mes Réservations & Avis</a>
+                <a href="../animal.php" class=" px-3 py-1 rounded">Acceuil</a>
+                <a href="visiteur_tours.php" class=" px-3 py-1 rounded">Les visites disponibles</a>
+                <a href="visiteur_dashboard.php" class="text-yellow-300 font-bold border-b-2 border-yellow-300">Mes Réservations </a>
                 <a href="logout.php" class="bg-red-600 px-3 py-1 rounded hover:bg-red-700 text-sm">Déconnexion</a>
             </div>
         </div>

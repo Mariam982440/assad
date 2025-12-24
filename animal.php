@@ -74,8 +74,8 @@ $result =mysqli_query($conn,$sql);
             
             <!-- lien visible seulement pour le visiteur-->
             <?php if($role=='visiteur'):?>
-            <a href="admin/admin_compte.php" class=" px-3 py-1 rounded">Comptes</a>
-            <a href="admin/admin_panel.php" class=" px-3 py-1 rounded">Statistiques</a>
+            <a href="visiteur/visiteur_tours.php" class=" px-3 py-1 rounded">Les visites disponibles</a>
+            <a href="visiteur/visiteur_dashboard.php" class=" px-3 py-1 rounded">Mes réservations</a>
             <?php endif; ?>
 
             <a href="logout.php" class="bg-gray-700 px-3 py-1 rounded hover:bg-gray-800">Déconnexion</a>

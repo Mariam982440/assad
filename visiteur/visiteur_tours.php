@@ -1,135 +1,140 @@
+<?php
+session_start();
+require '../db.php'; // Vérifie que le chemin vers db.php est bon
+
+// 1. SÉCURITÉ : Vérifier si c'est un VISITEUR
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'visiteur') {
+    header("Location: ../login.php");
+    exit();
+}
+
+// On affiche TOUTES les visites, triées par date
+$sql = "SELECT v.*, u.nom_usr AS nom_guide 
+        FROM visite_guidee v 
+        LEFT JOIN utilisateur u ON v.id_utilisateur = u.id_usr 
+        ORDER BY v.dateheure DESC";
+
+$result = mysqli_query($conn, $sql);
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Réserver une Visite - ASSAD Zoo</title>
+    <title>Liste des Visites</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-gray-50">
 
     <!-- NAVBAR VISITEUR -->
-    <nav class="bg-green-800 text-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="font-bold text-xl flex items-center gap-2">
-                <i class="fas fa-paw text-yellow-400"></i> ASSAD ZOO
-            </div>
+    <nav class="bg-green-800 text-white p-4 shadow-lg mb-8">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="font-bold text-xl">🦁 ASSAD ZOO</div>
             <div class="space-x-4">
-                <a href="asaad.php" class="hover:text-yellow-200">Accueil</a>
-                <a href="visitor_tours.php" class="text-yellow-300 font-bold border-b-2 border-yellow-300">Réserver une visite</a>
-                <a href="visitor_dashboard.php" class="hover:text-yellow-200">Mes Réservations & Avis</a>
-                <a href="logout.php" class="bg-red-600 px-3 py-1 rounded hover:bg-red-700 text-sm">Déconnexion</a>
+                <a href="../animal.php" class="hover:text-yellow-300">Accueil</a>
+                <a href="visiteur_tours.php" class=" px-3 py-1 rounded">Les visites disponibles</a>
+                <a href="visiteur_dashboard.php" class="hover:text-yellow-300">Mes Réservations</a>
+                <a href="../logout.php" class="bg-red-600 px-3 py-1 rounded text-sm">Déconnexion</a>
             </div>
         </div>
     </nav>
 
-    <!-- HEADER -->
-    <header class="bg-white shadow py-8 mb-8">
-        <div class="container mx-auto px-6 text-center">
-            <h1 class="text-3xl font-bold text-green-900">Explorez le Zoo en Direct</h1>
-            <p class="text-gray-600 mt-2">Réservez votre place pour une visite guidée exclusive avec nos experts.</p>
-        </div>
-    </header>
-
     <div class="container mx-auto px-6 pb-12">
-        
-        <!-- FILTRES DE RECHERCHE -->
-        <div class="flex flex-wrap gap-4 mb-8 justify-center">
-            <input type="date" class="border p-2 rounded focus:ring-2 focus:ring-green-500">
-            <select class="border p-2 rounded focus:ring-2 focus:ring-green-500">
-                <option>Toutes les langues</option>
-                <option>Français</option>
-                <option>Arabe</option>
-                <option>Anglais</option>
-            </select>
-            <button class="bg-green-700 text-white px-6 py-2 rounded hover:bg-green-800"><i class="fas fa-search"></i> Rechercher</button>
-        </div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Toutes les Visites Guidées</h1>
 
-        <!-- GRILLE DES VISITES DISPONIBLES -->
+        <!-- GRILLE DES VISITES -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-            <!-- CARTE VISITE 1 -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition">
-                <div class="relative h-48 bg-gray-200">
-                    <img src="https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=600" alt="Lions" class="w-full h-full object-cover">
-                    <div class="absolute top-2 right-2 bg-yellow-400 text-xs font-bold px-2 py-1 rounded shadow">Populaire</div>
+            <?php if(mysqli_num_rows($result) == 0): ?>
+                <div class="col-span-3 text-center text-gray-500 py-10">
+                    Aucune visite trouvée dans la base de données.
                 </div>
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-xl text-gray-800">Les Rois de l'Atlas</h3>
-                        <span class="text-green-700 font-bold text-lg">50 DH</span>
+            <?php endif; ?>
+
+            <?php while($row = mysqli_fetch_assoc($result)): ?>
+                <?php
+                    // CALCUL DES PLACES (Indispensable pour la réservation)
+                    $id_v = $row['id'];
+                    // On compte combien de personnes sont déjà inscrites
+                    $q_res = mysqli_query($conn, "SELECT SUM(nbpersonnes) as total FROM reservations WHERE id_visite = $id_v");
+                    $d_res = mysqli_fetch_assoc($q_res);
+                    
+                    $places_prises = $d_res['total'] ? $d_res['total'] : 0;
+                    $places_restantes = $row['capacite_max'] - $places_prises;
+                    
+                    // Formatage simple
+                    $date_fmt = date("d/m/Y H:i", strtotime($row['dateheure']));
+                ?>
+
+                <!-- CARTE VISITE -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                    
+                    <!-- En-tête -->
+                    <div class="bg-green-100 p-4 border-b border-green-200 flex justify-between">
+                        <h3 class="font-bold text-lg text-green-900"><?= htmlspecialchars($row['titre']) ?></h3>
+                        <span class="font-bold text-green-800"><?= $row['prix'] ?> DH</span>
                     </div>
                     
-                    <div class="text-sm text-gray-600 space-y-2 mb-4">
-                        <p><i class="far fa-calendar-alt w-5 text-green-600"></i> 25 Jan 2025</p>
-                        <p><i class="far fa-clock w-5 text-green-600"></i> 14:00 (1h30)</p>
-                        <p><i class="fas fa-language w-5 text-green-600"></i> Français</p>
-                        <p><i class="fas fa-map-signs w-5 text-green-600"></i> Parcours : Lions -> Hyènes</p>
-                    </div>
-
-                    <!-- Barre de progression places -->
-                    <div class="mb-4">
-                        <div class="flex justify-between text-xs mb-1">
-                            <span>Places restantes</span>
-                            <span class="font-bold text-red-600">5 / 20</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-green-600 h-2 rounded-full" style="width: 75%"></div>
+                    <!-- Corps -->
+                    <div class="p-4 space-y-2">
+                        <p class="text-sm text-gray-600"><span class="font-bold">Guide :</span> <?= htmlspecialchars($row['nom_guide'] ?? 'Inconnu') ?></p>
+                        <p class="text-sm text-gray-600"><span class="font-bold">Date :</span> <?= $date_fmt ?></p>
+                        <p class="text-sm text-gray-600"><span class="font-bold">Langue :</span> <?= htmlspecialchars($row['langue']) ?></p>
+                        
+                        <!-- Places restantes -->
+                        <div class="mt-2 text-sm">
+                            Places : <span class="font-bold <?= $places_restantes > 0 ? 'text-green-600' : 'text-red-600' ?>">
+                                <?= $places_prises ?> / <?= $row['capacite_max'] ?>
+                            </span>
                         </div>
                     </div>
 
-                    <!-- FORMULAIRE DE RÉSERVATION INTÉGRÉ -->
-                    <form action="book_action.php" method="POST" class="mt-4 pt-4 border-t border-gray-100">
-                        <input type="hidden" name="id_visite" value="1">
-                        <div class="flex gap-2 items-center">
-                            <input type="number" name="nb_personnes" min="1" max="5" value="1" class="w-16 border p-2 rounded text-center" title="Nombre de personnes">
-                            <button type="submit" class="flex-1 bg-red-600 text-white py-2 rounded font-bold hover:bg-red-700 transition">
-                                Réserver
-                            </button>
-                        </div>
-                    </form>
+                    <!-- FORMULAIRE DE RÉSERVATION -->
+                    <div class="p-4 bg-gray-50 border-t border-gray-200">
+    <?php if($places_restantes > 0): ?>
+        
+        <form action="reserv_tours.php" method="POST">
+            <!-- ID de la visite (Caché) -->
+            <input type="hidden" name="id_visite" value="<?= $id_v ?>">
+            
+            <div class="flex items-end gap-3">
+                
+                <!-- ZONE DE SAISIE DU NOMBRE DE MEMBRES -->
+                <div class="flex-1">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">
+                        Nombre de places :
+                    </label>
+                    <input type="number" 
+                           name="nb_personnes" 
+                           value="1" 
+                           min="1" 
+                           max="<?= $places_restantes ?>" 
+                           class="w-full border border-gray-300 rounded p-2 text-center font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500" 
+                           required>
                 </div>
+
+                <!-- BOUTON RESERVER -->
+                <button type="submit" name="book" class="bg-red-600 text-white font-bold py-2 px-6 rounded hover:bg-red-700 transition shadow-md h-[42px]">
+                    Réserver
+                </button>
             </div>
+            
+            <!-- Petit message d'info -->
+            <p class="text-xs text-gray-500 mt-2">
+                * Maximum <?= $places_restantes ?> personnes possibles.
+            </p>
+        </form>
 
-            <!-- CARTE VISITE 2 -->
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition">
-                <div class="relative h-48 bg-gray-200">
-                    <img src="https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=600" alt="Oiseaux" class="w-full h-full object-cover">
+    <?php else: ?>
+        <button disabled class="w-full bg-gray-300 text-gray-500 font-bold py-2 rounded cursor-not-allowed uppercase tracking-wider">
+            Complet
+        </button>
+    <?php endif; ?>
+</div>
+
                 </div>
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-bold text-xl text-gray-800">Oiseaux Exotiques</h3>
-                        <span class="text-green-700 font-bold text-lg">40 DH</span>
-                    </div>
-                    
-                    <div class="text-sm text-gray-600 space-y-2 mb-4">
-                        <p><i class="far fa-calendar-alt w-5 text-green-600"></i> 26 Jan 2025</p>
-                        <p><i class="far fa-clock w-5 text-green-600"></i> 10:00 (1h00)</p>
-                        <p><i class="fas fa-language w-5 text-green-600"></i> Arabe</p>
-                        <p><i class="fas fa-map-signs w-5 text-green-600"></i> Parcours : Volière -> Lac</p>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="flex justify-between text-xs mb-1">
-                            <span>Places restantes</span>
-                            <span class="font-bold text-green-600">12 / 15</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-green-600 h-2 rounded-full" style="width: 20%"></div>
-                        </div>
-                    </div>
-
-                    <form action="book_action.php" method="POST" class="mt-4 pt-4 border-t border-gray-100">
-                        <input type="hidden" name="id_visite" value="2">
-                        <div class="flex gap-2 items-center">
-                            <input type="number" name="nb_personnes" min="1" max="12" value="1" class="w-16 border p-2 rounded text-center">
-                            <button type="submit" class="flex-1 bg-red-600 text-white py-2 rounded font-bold hover:bg-red-700 transition">
-                                Réserver
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <?php endwhile; ?>
 
         </div>
     </div>
